@@ -18,7 +18,7 @@ async def send_welcome(message: types.Message) -> types.Message:
     await message.answer(
         'Выбери способ заживления',
         parse_mode=ParseMode.HTML,
-        reply_markup=reply.start_kb.as_markup(resize_keyboard=True))
+        reply_markup=reply.start_kb)
 
 
 @user_canal_router.message(Command('help'))
