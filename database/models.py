@@ -1,11 +1,12 @@
 from typing import Optional
 
-from sqlalchemy import Float, Integer, String, Text
+from sqlalchemy import Integer, String, DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
-    pass
+    created: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    updated: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
 
 class User(Base):
@@ -14,6 +15,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True,
                                     autoincrement=True)
-    user_id: Mapped[str] = mapped_column(Integer, nullable=False)
-    healing_method: Mapped[str] = mapped_column(String(8))
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    username: Mapped[str] = mapped_column(String, nullable=False)
+    healing_method: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
     notify_counter: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
