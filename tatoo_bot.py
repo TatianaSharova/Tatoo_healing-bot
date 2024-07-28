@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from handlers.user import user_canal_router
 from handlers.admin import admin_router
 from keyboards.bot_cmds_list import bot_cmds
-#from middlewares.db import DataBaseSession
+from middlewares.media import MediaMiddleware
 
 load_dotenv()
 
@@ -44,6 +44,7 @@ dp.include_router(user_canal_router)
 
 async def main():
     '''Запуск бота.'''
+    dp.message.middleware(MediaMiddleware())
     # dp.startup.register(on_startup)
     # dp.shutdown.register(on_shutdown)
     # dp.update.middleware(DataBaseSession(session_pool=session_maker))

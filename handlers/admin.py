@@ -6,6 +6,9 @@ from aiogram.filters import Command, StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.methods import forward_message
+from typing import List
+from aiogram.methods.send_media_group import SendMediaGroup
+from aiogram.types import Message, InputMediaPhoto, InputMediaVideo, ContentType as CT
 
 from dotenv import load_dotenv
 import os
@@ -60,14 +63,38 @@ async def post(message: types.Message,  state: FSMContext) -> types.Message:
     await state.set_state(Post.post)
 
 
-@admin_router.message(Post.post, F.content_type.in_({'text', 'photo', 'video'}))
-async def add_crypto_name(message: types.Message,
-                          state: FSMContext):
-    #await message.forward(chat_id=ADMIN_2, disable_notification=True)
+# пример отправки тех же данных в виде медиагруппы
+@admin_router.message(Post.post,
+                      F.media_group_id != None,
+                      F.content_type.in_([
+                          CT.PHOTO, CT.VIDEO
+                      ]))
+async def handle_albums(message: Message, album: list[Message]):
+    media_group = []
+    first = True
+    for msg in album:
+        if msg.photo:
+            file_id = msg.photo[-1].file_id
+            if first:
+                media_group.append(InputMediaPhoto(
+                    media=file_id,
+                    caption=message.caption))
+                first = False
+            else:
+                media_group.append(InputMediaPhoto(
+                        media=file_id))
+        if msg.video:
+            file_id = msg.video.file_id
+            if first:
+                media_group.append(InputMediaVideo(
+                    media=file_id, caption=message.caption))
+            else:
+                media_group.append(InputMediaVideo(media=file_id))
+
+    await message.answer_media_group(media_group)
+
+
+@admin_router.message(Post.post,
+                      F.content_type.in_({'text', 'photo', 'video'}))
+async def send_post(message: types.Message, state: FSMContext):
     await message.send_copy(chat_id=ADMIN_2)
-
-
-
-
-
-    
