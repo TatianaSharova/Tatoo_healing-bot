@@ -57,19 +57,18 @@ async def get_help(message: types.Message) -> types.Message:
 @admin_router.message(StateFilter(None), Command('post'))
 async def post(message: types.Message,  state: FSMContext) -> types.Message:
     await message.answer(
-        'Пришлите пост, который хотите разослать подписчикам.',
-        parse_mode=ParseMode.HTML,
+        'Пришлите пост, который хотите разослать подписчикам.'
         )
     await state.set_state(Post.post)
 
 
-# пример отправки тех же данных в виде медиагруппы
 @admin_router.message(Post.post,
                       F.media_group_id != None,
                       F.content_type.in_([
                           CT.PHOTO, CT.VIDEO
                       ]))
-async def handle_albums(message: Message, album: list[Message]):
+async def handle_albums(message: Message, album: list[Message],
+                        state: FSMContext):
     media_group = []
     first = True
     for msg in album:
@@ -92,9 +91,19 @@ async def handle_albums(message: Message, album: list[Message]):
                 media_group.append(InputMediaVideo(media=file_id))
 
     await message.answer_media_group(media_group)
+    await state.clear()
+
+    await message.answer(
+        'Пост был успешно разослан подписчикам.'
+        )
 
 
 @admin_router.message(Post.post,
                       F.content_type.in_({'text', 'photo', 'video'}))
 async def send_post(message: types.Message, state: FSMContext):
     await message.send_copy(chat_id=ADMIN_2)
+    await state.clear()
+
+    await message.answer(
+        'Пост был успешно разослан подписчикам.'
+        )
