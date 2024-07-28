@@ -5,11 +5,12 @@ import os
 from aiogram import Bot, Dispatcher, types
 from dotenv import load_dotenv
 
-#from database.engine import create_db, drop_db, session_maker
+from database.engine import create_db, drop_db, session_maker
 from handlers.user import user_canal_router
 from handlers.admin import admin_router
 from keyboards.bot_cmds_list import bot_cmds
 from middlewares.media import MediaMiddleware
+from middlewares.db import DataBaseSession
 
 load_dotenv()
 
@@ -28,26 +29,26 @@ dp.include_router(user_canal_router)
 
 
 
-# async def on_startup(bot):
-#     '''Запускает БД.'''
+async def on_startup(bot):
+    '''Запускает БД.'''
 
-#     run_param = False
-#     if run_param:
-#         await drop_db()
+    run_param = True
+    if run_param:
+        await drop_db()
 
-#     await create_db()
+    await create_db()
 
 
-# async def on_shutdown(bot):
-#     print('Бот выключен.')
+async def on_shutdown(bot):
+    print('Бот выключен.')
 
 
 async def main():
     '''Запуск бота.'''
     dp.message.middleware(MediaMiddleware())
-    # dp.startup.register(on_startup)
-    # dp.shutdown.register(on_shutdown)
-    # dp.update.middleware(DataBaseSession(session_pool=session_maker))
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
+    dp.update.middleware(DataBaseSession(session_pool=session_maker))
 
     await bot.delete_webhook(drop_pending_updates=True)
 
