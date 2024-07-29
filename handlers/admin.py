@@ -9,6 +9,11 @@ from aiogram.methods import forward_message
 from typing import List
 from aiogram.methods.send_media_group import SendMediaGroup
 from aiogram.types import Message, InputMediaPhoto, InputMediaVideo, ContentType as CT
+from sqlalchemy.ext.asyncio import AsyncSession
+from database.orm_query import orm_get_list_users, orm_delete_user
+from aiogram.exceptions import TelegramForbiddenError
+from aiogram.methods.send_media_group import SendMediaGroup
+from aiogram import Bot
 
 from dotenv import load_dotenv
 import os
@@ -68,7 +73,8 @@ async def post(message: types.Message,  state: FSMContext) -> types.Message:
                           CT.PHOTO, CT.VIDEO
                       ]))
 async def handle_albums(message: Message, album: list[Message],
-                        state: FSMContext):
+                        state: FSMContext, session: AsyncSession,
+                        bot: Bot):
     media_group = []
     first = True
     for msg in album:
@@ -89,8 +95,13 @@ async def handle_albums(message: Message, album: list[Message],
                     media=file_id, caption=message.caption))
             else:
                 media_group.append(InputMediaVideo(media=file_id))
+    users = await orm_get_list_users(session)
+    for user in users:
+        try:
+            await bot.send_media_group(chat_id=user.user_id, media=media_group)
+        except TelegramForbiddenError:
+            await orm_delete_user(session, user.user_id)
 
-    await message.answer_media_group(media_group)
     await state.clear()
 
     await message.answer(
@@ -100,8 +111,14 @@ async def handle_albums(message: Message, album: list[Message],
 
 @admin_router.message(Post.post,
                       F.content_type.in_({'text', 'photo', 'video'}))
-async def send_post(message: types.Message, state: FSMContext):
-    await message.send_copy(chat_id=ADMIN_2)
+async def send_post(message: types.Message, state: FSMContext,
+                    session: AsyncSession):
+    users = await orm_get_list_users(session)
+    for user in users:
+        try:
+            await message.send_copy(user.user_id)
+        except TelegramForbiddenError:
+            await orm_delete_user(session, user.user_id)
     await state.clear()
 
     await message.answer(
