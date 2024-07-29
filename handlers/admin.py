@@ -5,20 +5,13 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.filters import Command, StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.methods import forward_message
 from typing import List
 from aiogram.methods.send_media_group import SendMediaGroup
 from aiogram.types import Message, InputMediaPhoto, InputMediaVideo, ContentType as CT
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import orm_get_list_users, orm_delete_user
 from aiogram.exceptions import TelegramForbiddenError
-from aiogram.methods.send_media_group import SendMediaGroup
 from aiogram import Bot
-
-from dotenv import load_dotenv
-import os
-load_dotenv()
-ADMIN_2 = int(os.getenv('ADMIN_2'))
 
 
 admin_router = Router()
