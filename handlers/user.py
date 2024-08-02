@@ -3,6 +3,9 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.filters import Command, CommandStart
 from database.orm_query import orm_get_user, orm_add_user, orm_add_healing_method
 from sqlalchemy.ext.asyncio import AsyncSession
+import asyncio
+from datetime import datetime as dt
+from scheduler.scheduler import send_instr_for_skin
 
 from keyboards import reply
 
@@ -44,7 +47,7 @@ async def choose_skin(message: types.Message, session: AsyncSession):
         'Ты заживляешь тату с помощью пленки, супер! Буду каждый день слать тебе сообщение.',
         parse_mode=ParseMode.HTML,
         )
-
+    asyncio.create_task(send_instr_for_skin(message))
 
 
 
