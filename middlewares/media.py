@@ -1,10 +1,14 @@
 import asyncio
 from typing import *
+
 from aiogram import BaseMiddleware
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 
 
 class MediaMiddleware(BaseMiddleware):
+    '''
+    Middleware для объединения полученных медиафайлов в альбом.
+    '''
     album_data: dict = {}
 
     def __init__(self, latency: Union[int, float] = 0.01):
@@ -26,9 +30,9 @@ class MediaMiddleware(BaseMiddleware):
             await asyncio.sleep(self.latency)
 
             data['_is_last'] = True
-            data["album"] = self.album_data[message.media_group_id]
+            data['album'] = self.album_data[message.media_group_id]
             await handler(message, data)
 
-        if message.media_group_id and data.get("_is_last"):
+        if message.media_group_id and data.get('_is_last'):
             del self.album_data[message.media_group_id]
             del data['_is_last']
