@@ -1,25 +1,17 @@
 import asyncio
 import logging
 import os
-from pytz import utc
-from datetime import datetime, timedelta
 
 from aiogram import Bot, Dispatcher, types
 from dotenv import load_dotenv
 
 from database.engine import create_db, drop_db, session_maker
-from database.models import User
-from handlers.user import user_canal_router
 from handlers.admin import admin_router
+from handlers.user import user_canal_router
 from keyboards.bot_cmds_list import bot_cmds
-from middlewares.media import MediaMiddleware
 from middlewares.db import DataBaseSession
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from middlewares.media import MediaMiddleware
 from scheduler.scheduler import scheduler
-
 
 load_dotenv()
 
@@ -34,7 +26,6 @@ dp: Dispatcher = Dispatcher()
 bot: Bot = Bot(token=TELEGRAM_TOKEN)
 dp.include_router(admin_router)
 dp.include_router(user_canal_router)
-
 
 
 async def on_startup(bot):
@@ -61,13 +52,12 @@ async def main():
 
     await bot.delete_webhook(drop_pending_updates=True)
 
-    # await bot.set_my_commands(commands=bot_cmds,
-    #                           scope=types.BotCommandScopeAllPrivateChats())
+    await bot.set_my_commands(commands=bot_cmds,
+                              scope=types.BotCommandScopeAllPrivateChats())
 
     while True:
         scheduler.start()
         await dp.start_polling(bot)
-
 
 
 if __name__ == "__main__":
