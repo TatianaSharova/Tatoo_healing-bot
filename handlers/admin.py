@@ -1,23 +1,20 @@
-from aiogram import F, Router, types
-from filters.chat_types import IsAdmin
-from aiogram import F, Router, types
+from aiogram import Bot, F, Router, types
 from aiogram.enums.parse_mode import ParseMode
+from aiogram.exceptions import TelegramForbiddenError
 from aiogram.filters import Command, StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from typing import List
-from aiogram.methods.send_media_group import SendMediaGroup
-from aiogram.types import Message, InputMediaPhoto, InputMediaVideo, ContentType as CT
+from aiogram.types import ContentType as CT
+from aiogram.types import InputMediaPhoto, InputMediaVideo, Message
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.orm_query import orm_get_list_users, orm_delete_user
-from aiogram.exceptions import TelegramForbiddenError
-from aiogram import Bot
 
+from database.orm_query import orm_delete_user, orm_get_list_users
+from filters.chat_types import IsAdmin
 
 admin_router = Router()
 admin_router.message.filter(IsAdmin())
 
-# FSM
+
 class Post(StatesGroup):
 
     post = State()
@@ -26,11 +23,12 @@ class Post(StatesGroup):
 
 
 @admin_router.message(
-        StateFilter("*"), Command("cancel"))
+        StateFilter('*'), Command('cancel'))
 @admin_router.message(
-    StateFilter("*"), or_f(F.text.casefold() == "отмена",
-                           F.text.casefold() == "cancel"))
+    StateFilter('*'), or_f(F.text.casefold() == 'отмена',
+                           F.text.casefold() == 'cancel'))
 async def cancel_handler(message: types.Message, state: FSMContext) -> None:
+    '''Прекращает выполнение действия для админа.'''
     current_state = await state.get_state()
     if current_state is None:
         return
@@ -61,7 +59,7 @@ async def post(message: types.Message,  state: FSMContext) -> types.Message:
 
 
 @admin_router.message(Post.post,
-                      F.media_group_id != None,
+                      F.media_group_id is not None,
                       F.content_type.in_([
                           CT.PHOTO, CT.VIDEO
                       ]))
